@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
+import type { ReactElement } from 'react'
 import { effect, stop } from '@vue/reactivity'
 import type { ReactiveEffect } from '@vue/reactivity'
 
@@ -11,7 +12,7 @@ export function useMutableState<T> (value: T): T {
   return useState(value)[0]
 }
 
-export function useReactive<E extends React.ReactElement | null> (jsxFac: () => E): E {
+export function useReactive<E extends ReactElement | null> (jsxFac: () => E): E {
   const forceUpdate = useForceUpdate()
   const ref = useRef({
     runner: null as ReactiveEffect<E> | null
