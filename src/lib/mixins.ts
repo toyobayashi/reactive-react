@@ -13,6 +13,7 @@ export function makeReactive<T extends new (...args: any[]) => Component> (C: T)
 
     componentWillUnmount () {
       cleanup(this)
+      super.componentWillUnmount()
     }
   }
 }
