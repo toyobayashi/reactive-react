@@ -1,39 +1,98 @@
 # reactive-react
 
-20 行代码让 react 用上 `@vue/reactivity`
+10 行代码让 react 用上 `@vue/reactivity`
 
 ```bash
 npm install
 npm run serve
 ```
 
+核心代码 10 行：
+
 ```js
-import { useRef } from 'react'
 import { effect, stop } from '@vue/reactivity'
+
+function cleanup (context) {
+  if (context.$$runner) {
+    stop(context.$$runner)
+    context.$$runner = null
+  }
+}
+
+function trackRender (context, renderFunction, forceUpdate) {
+  cleanup(context)
+  context.$$runner = effect(renderFunction, {
+    lazy: true,
+    scheduler: () => { forceUpdate() }
+  })
+  return context.$$runner()
+}
+```
+
+Hooks 写法：
+
+```js
+import * as React from 'react'
+import { ref, computed } from '@vue/reactivity'
+
+function useForceUpdate () {
+  const setState = useState(Object.create(null))[1]
+  return useCallback(() => { setState(Object.create(null)) }, [])
+}
+
+function useMutableState (value) {
+  return useState(value)[0]
+}
 
 function useReactive (jsxFac) {
   const forceUpdate = useForceUpdate()
-  const ref = useRef({
-    runner: null
-  })
-  if (ref.current.runner) {
-    // 每次渲染先清理上次的响应式监听
-    stop(ref.current.runner)
-  }
+  const context = useRef({
+    $$runner: null
+  }).current
+  useEffect(() => () => { cleanup(context) }, [])
 
-  ref.current.runner = effect(() => jsxFac(), {
-    lazy: true,
-    scheduler () {
-      forceUpdate()
-    }
-  })
-
-  // 重新收集 JSX 中访问到的响应式对象，有变化时更新当前组件
-  return ref.current.runner()
+  return trackRender(context, jsxFac, forceUpdate)
 }
 
 function Component () {
-  // ...
+  const localState = useMutableState(ref(0))
+  const localComputed = useMutableState(computed(() => localState.value * 2))
   return useReactive(() => (/* JSX */))
 }
+```
+
+Class 写法
+
+```js
+import * as React from 'react'
+import { ref, computed } from '@vue/reactivity'
+
+function makeReactive (C) {
+  return class extends C {
+    constructor (props) {
+      super(props)
+      this.$$runner = null
+    }
+
+    render () {
+      return trackRender(this, () => super.render(), () => { this.forceUpdate() })
+    }
+
+    componentWillUnmount () {
+      cleanup(this)
+    }
+  }
+}
+
+const Component = makeReactive(class extends React.Component {
+  constructor (props) {
+    super(props)
+    this.localState = ref(0)
+    this.localComputed = computed(() => this.localState.value * 2)
+  }
+
+  render () {
+    return (/* JSX */)
+  }
+})
 ```
