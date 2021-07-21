@@ -80,6 +80,7 @@ function makeReactive (C) {
 
     componentWillUnmount () {
       cleanup(this)
+      super.componentWillUnmount()
     }
   }
 }
