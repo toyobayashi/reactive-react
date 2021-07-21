@@ -36,20 +36,20 @@ import * as React from 'react'
 import { ref, computed } from '@vue/reactivity'
 
 function useForceUpdate () {
-  const setState = useState(Object.create(null))[1]
-  return useCallback(() => { setState(Object.create(null)) }, [])
+  const setState = React.useState(Object.create(null))[1]
+  return React.useCallback(() => { setState(Object.create(null)) }, [])
 }
 
 function useMutableState (value) {
-  return useState(value)[0]
+  return React.useState(value)[0]
 }
 
 function useReactive (jsxFac) {
   const forceUpdate = useForceUpdate()
-  const context = useRef({
+  const context = React.useRef({
     $$runner: null
   }).current
-  useEffect(() => () => { cleanup(context) }, [])
+  React.useEffect(() => () => { cleanup(context) }, [])
 
   return trackRender(context, jsxFac, forceUpdate)
 }
