@@ -1,2 +1,8 @@
+export * from './core'
 export * from './hooks'
-export * from './mixins'
+
+export type {
+  ForceUpdateFunction,
+  ReactiveComponentContext,
+  RenderFunction
+} from './types'

@@ -14,9 +14,10 @@ export function useMutableState<T> (value: T): T {
 export function useReactive (jsxFac: RenderFunction): ReactElement<any, any> | null {
   const forceUpdate = useForceUpdate()
   const context = useRef<ReactiveComponentContext>({
-    $$runner: null
+    $$reactiveRender: null,
+    forceUpdate
   }).current
   useEffect(() => () => { cleanup(context) }, [])
 
-  return trackRender(context, jsxFac, forceUpdate) as ReactElement<any, any>
+  return trackRender(context, jsxFac) as ReactElement<any, any>
 }
