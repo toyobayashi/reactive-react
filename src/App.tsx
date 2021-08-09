@@ -1,10 +1,7 @@
 import * as React from 'react'
 import { reactive, ref, computed, ReactiveEffect } from '@vue/reactivity'
-import type { Ref } from '@vue/reactivity'
-import { useReactive, useMutableState, cleanup, trackRender } from './lib'
+import { useRender, useMutable, untrack, track, emptyDepList, deref } from './lib'
 import type { ReactiveComponentContext } from './lib'
-
-const deref: <T>(ref: Ref<T>) => T = ref => ref.value
 
 const store = reactive({
   count: 0
@@ -12,7 +9,7 @@ const store = reactive({
 
 const A: React.FC<{}> = function () {
   console.log('[render] A')
-  return useReactive(() =>
+  return useRender(() =>
     <div>A: {store.count}</div>
   )
 }
@@ -22,18 +19,18 @@ class AClass extends React.Component<{}> implements ReactiveComponentContext {
 
   render () {
     console.log('[render] AClass')
-    return trackRender(this, () => <div>AClass: {store.count}</div>)
+    return track(this, () => <div>AClass: {store.count}</div>)
   }
 
   componentWillUnmount () {
-    cleanup(this)
+    untrack(this)
   }
 }
 
 const B: React.FC<{}> = function () {
   console.log('[render] B')
-  const doubleCount = useMutableState(computed(() => store.count * 2))
-  return useReactive(() =>
+  const doubleCount = useMutable(() => computed(() => store.count * 2))
+  return useRender(() =>
     <div>B: {deref(doubleCount)}</div>
   )
 }
@@ -44,23 +41,31 @@ class BClass extends React.Component<{}> implements ReactiveComponentContext {
 
   render () {
     console.log('[render] BClass')
-    return trackRender(this, () => <div>BClass: {deref(this.doubleCount)}</div>)
+    return track(this, () => <div>BClass: {deref(this.doubleCount)}</div>)
   }
 
   componentWillUnmount () {
-    cleanup(this)
+    untrack(this)
   }
 }
 
 const C: React.FC<{}> = function () {
   console.log('[render] C')
-  const localCount = useMutableState(ref(0))
-  const localDoubleCount = useMutableState(computed(() => deref(localCount) * 2))
-  const onClick = React.useCallback(() => {
-    localCount.value++
-  }, [])
-  return useReactive(() =>
-    <div>C: {deref(localCount)} * 2 = {deref(localDoubleCount)} <button onClick={onClick}>Local +</button></div>
+  const data = useMutable(() => {
+    const localCount = ref(0)
+    const localDoubleCount = computed(() => deref(localCount) * 2)
+    const onClick = () => {
+      localCount.value++
+    }
+    return {
+      localCount,
+      localDoubleCount,
+      onClick
+    }
+  })
+
+  return useRender(() =>
+    <div>C: {deref(data.localCount)} * 2 = {deref(data.localDoubleCount)} <button onClick={data.onClick}>Local +</button></div>
   )
 }
 
@@ -72,20 +77,20 @@ class CClass extends React.Component<{}> implements ReactiveComponentContext {
 
   render () {
     console.log('[render] CClass')
-    return trackRender(this, () => {
+    return track(this, () => {
       return <div>C: {deref(this.localCount)} * 2 = {deref(this.localDoubleCount)} <button onClick={this.onClick}>Local +</button></div>
     })
   }
 
   componentWillUnmount () {
-    cleanup(this)
+    untrack(this)
   }
 }
 
 const App: React.FC<{}> = function () {
   const onClick = React.useCallback(() => {
     store.count++
-  }, [])
+  }, emptyDepList)
 
   return <>
     <button onClick={onClick}>+</button>

@@ -14,15 +14,15 @@ npm run serve
 ```js
 import { effect, stop } from '@vue/reactivity'
 
-function cleanup (context) {
+function untrack (context) {
   if (context.$$reactiveRender) {
     stop(context.$$reactiveRender)
     context.$$reactiveRender = null
   }
 }
 
-function trackRender (context, renderFunction) {
-  cleanup(context)
+function track (context, renderFunction) {
+  untrack(context)
   context.$$reactiveRender = effect(renderFunction, {
     lazy: true,
     scheduler: () => { context.forceUpdate() }
@@ -37,7 +37,7 @@ function trackRender (context, renderFunction) {
 import type { ReactiveEffect } from '@vue/reactivity'
 import type { ReactNode } from 'react'
 
-interface ReactiveComponentContext {
+declare interface ReactiveComponentContext {
   $$reactiveRender: ReactiveEffect<ReactNode> | null
   forceUpdate (callback?: () => void): void
 }
@@ -51,35 +51,62 @@ interface ReactiveComponentContext {
 import * as React from 'react'
 import { ref, computed } from '@vue/reactivity'
 
+const emptyPlainObject = Object.create(null)
+const emptyDepList = []
+
 function useForceUpdate () {
-  const setState = React.useState(Object.create(null))[1]
-  return React.useCallback(() => { setState(Object.create(null)) }, [])
+  const setState = React.useState(emptyPlainObject)[1]
+  return React.useCallback(() => { setState(Object.create(null)) }, emptyDepList)
 }
 
-function useMutableState (value) {
-  return React.useState(value)[0]
+function useMutable (factory) {
+  const ref = React.useRef()
+  if (ref.current == null) {
+    const maybeObject = factory()
+    if ((typeof maybeObject !== 'object' || maybeObject === null) && (typeof maybeObject !== 'function')) {
+      throw new TypeError('useMutable callback must return object')
+    }
+    ref.current = maybeObject
+  }
+  return ref.current
 }
 
-function useReactive (jsxFac) {
+function useReactiveContext () {
   const forceUpdate = useForceUpdate()
-
-  // 响应式组件上下文
-  const context = React.useRef({
+  return useMutable(() => ({
     $$reactiveRender: null,
     forceUpdate
-  }).current
-
-  // 组件销毁取消监听
-  React.useEffect(() => () => { cleanup(context) }, [])
-
-  // 每次渲染重新依赖收集
-  return trackRender(context, jsxFac)
+  }))
 }
 
-function ReactiveComponent () {
-  const localState = useMutableState(ref(0))
-  const localComputed = useMutableState(computed(() => localState.value * 2))
-  return useReactive(() => (/* JSX 中可访问响应式对象 */))
+function useRender (jsxFac) {
+  // 响应式组件上下文
+  const context = useReactiveContext()
+
+  // 组件销毁取消监听
+  React.useEffect(() => () => { untrack(context) }, emptyDepList)
+
+  // 每次渲染重新依赖收集
+  return track(context, jsxFac)
+}
+
+function Counter () {
+  const data = useMutable(() => {
+    const localCount = ref(0)
+    const localDoubleCount = computed(() => localCount.value * 2)
+    const onClick = () => {
+      localCount.value++
+    }
+    return {
+      localCount,
+      localDoubleCount,
+      onClick
+    }
+  })
+
+  return useRender(() =>
+    <div>{data.localCount.value} * 2 = {data.localDoubleCount.value} <button onClick={data.onClick}>Local +</button></div>
+  )
 }
 ```
 
@@ -89,27 +116,30 @@ function ReactiveComponent () {
 import * as React from 'react'
 import { ref, computed } from '@vue/reactivity'
 
-class ReactiveComponent extends React.Component {
+class Counter extends React.Component {
   constructor (props) {
     super(props)
 
     // 组件实例本身当成响应式组件上下文
     this.$$reactiveRender = null
 
-    this.localState = ref(0)
-    this.localComputed = computed(() => this.localState.value * 2)
+    this.localCount = ref(0)
+    this.localDoubleCount = computed(() => this.localCount.value * 2)
+    this.onClick = () => {
+      this.localCount.value++
+    }
   }
 
   render () {
-    // ...
-
     // 每次渲染重新依赖收集
-    return trackRender(this, () => (/* JSX 中可访问响应式对象 */))
+    return track(this, () => {
+      return <div>{this.localCount.value} * 2 = {this.localDoubleCount.value} <button onClick={this.onClick}>Local +</button></div>
+    })
   }
 
   componentWillUnmount () {
     // 组件销毁取消监听
-    cleanup(this)
+    untrack(this)
   }
 })
 ```
