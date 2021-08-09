@@ -5,11 +5,10 @@ import { untrack, track } from './core'
 import { computed, reactive } from '@vue/reactivity'
 import type { UnwrapNestedRefs, ComputedRef } from '@vue/reactivity'
 
-const emptyPlainObject = Object.create(null)
 export const emptyDepList: DependencyList = []
 
 export function useForceUpdate (): () => void {
-  const setState = useState<{}>(emptyPlainObject)[1]
+  const setState = useState<{}>(null as any)[1]
   return useCallback(() => { setState(Object.create(null)) }, emptyDepList)
 }
 

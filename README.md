@@ -51,11 +51,10 @@ declare interface ReactiveComponentContext {
 import * as React from 'react'
 import { ref, computed } from '@vue/reactivity'
 
-const emptyPlainObject = Object.create(null)
 const emptyDepList = []
 
 function useForceUpdate () {
-  const setState = React.useState(emptyPlainObject)[1]
+  const setState = React.useState(null)[1]
   return React.useCallback(() => { setState(Object.create(null)) }, emptyDepList)
 }
 
