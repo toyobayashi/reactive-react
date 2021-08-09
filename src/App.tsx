@@ -1,16 +1,58 @@
 import * as React from 'react'
-import { reactive, ref, computed, ReactiveEffect } from '@vue/reactivity'
-import { useRender, useMutable, untrack, track, emptyDepList, deref } from './lib'
+import { ref, computed, ReactiveEffect } from '@vue/reactivity'
+import { useRender, useMutable, untrack, track, deref } from './lib'
 import type { ReactiveComponentContext } from './lib'
+import { /* IActionContext,  */Store } from './lib/store'
 
-const store = reactive({
-  count: 0
+/* interface IState {
+  count: number
+}
+
+type Getters = {
+  doubleCount: (state: IState) => number
+}
+
+type Mutations = {
+  add (state: IState, value: number): void
+}
+
+type Actions = {
+  multi (context: IActionContext<IState, Getters, Mutations, Actions>, value?: number): Promise<number>
+} */
+
+const store = new Store/* <IState, Getters, Mutations, Actions> */({
+  state: {
+    count: 0
+  },
+  getters: {
+    doubleCount (state) {
+      return state.count * 2
+    }
+  },
+  mutations: {
+    add (state, value: number = 1) {
+      state.count += value
+    },
+    multi (state, value: number = 2) {
+      state.count *= value
+    }
+  },
+  actions: {
+    multi ({ commit }) {
+      return new Promise<void>((resolve) => {
+        setTimeout(() => {
+          commit('multi')
+          resolve()
+        }, 200)
+      })
+    }
+  }
 })
 
 const A: React.FC<{}> = function () {
   console.log('[render] A')
   return useRender(() =>
-    <div>A: {store.count}</div>
+    <div>A: {store.state.count}</div>
   )
 }
 
@@ -19,7 +61,7 @@ class AClass extends React.Component<{}> implements ReactiveComponentContext {
 
   render () {
     console.log('[render] AClass')
-    return track(this, () => <div>AClass: {store.count}</div>)
+    return track(this, () => <div>AClass: {store.state.count}</div>)
   }
 
   componentWillUnmount () {
@@ -29,7 +71,7 @@ class AClass extends React.Component<{}> implements ReactiveComponentContext {
 
 const B: React.FC<{}> = function () {
   console.log('[render] B')
-  const doubleCount = useMutable(() => computed(() => store.count * 2))
+  const doubleCount = useMutable(() => computed(() => store.state.count * 2))
   return useRender(() =>
     <div>B: {deref(doubleCount)}</div>
   )
@@ -37,7 +79,7 @@ const B: React.FC<{}> = function () {
 
 class BClass extends React.Component<{}> implements ReactiveComponentContext {
   $$reactiveRender: ReactiveEffect<React.ReactNode> | null = null
-  doubleCount = computed(() => store.count * 2)
+  doubleCount = computed(() => store.state.count * 2)
 
   render () {
     console.log('[render] BClass')
@@ -88,12 +130,20 @@ class CClass extends React.Component<{}> implements ReactiveComponentContext {
 }
 
 const App: React.FC<{}> = function () {
-  const onClick = React.useCallback(() => {
-    store.count++
-  }, emptyDepList)
+  const data = useMutable(() => {
+    return {
+      onClick: () => {
+        store.mutations.add()
+      },
+      onClick2: () => {
+        store.actions.multi()
+      }
+    }
+  })
 
   return <>
-    <button onClick={onClick}>+</button>
+    <button onClick={data.onClick}>+</button>
+    <button onClick={data.onClick2}>x</button>
     <A />
     <AClass />
     <B />

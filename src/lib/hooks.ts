@@ -5,7 +5,7 @@ import { untrack, track } from './core'
 import { computed, reactive } from '@vue/reactivity'
 import type { UnwrapNestedRefs, ComputedRef } from '@vue/reactivity'
 
-export const emptyDepList: DependencyList = []
+const emptyDepList: DependencyList = []
 
 export function useForceUpdate (): () => void {
   const setState = useState<{}>(null as any)[1]
