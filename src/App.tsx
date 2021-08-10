@@ -2,25 +2,27 @@ import * as React from 'react'
 import { ref, computed, ReactiveEffect } from '@vue/reactivity'
 import { useRender, useMutable, untrack, track, deref } from './lib'
 import type { ReactiveComponentContext } from './lib'
-import { /* IActionContext,  */Store } from './lib/store'
+import { Store } from './lib/store'
+/* import type { IActionContext, GetterHandler, MutationHandler, ActionHandler } from './lib/store'
 
-/* interface IState {
+interface IState {
   count: number
 }
 
-type Getters = {
-  doubleCount: (state: IState) => number
+type GettersTree = {
+  doubleCount: GetterHandler<IState, GettersTree, number>
 }
 
 type Mutations = {
-  add (state: IState, value: number): void
+  add: MutationHandler<IState, [number?]>
+  multi: MutationHandler<IState, [number?]>
 }
 
 type Actions = {
-  multi (context: IActionContext<IState, Getters, Mutations, Actions>, value?: number): Promise<number>
+  multi: ActionHandler<IActionContext<IState, GettersTree, Mutations, Actions>, [string?], void>
 } */
 
-const store = new Store/* <IState, Getters, Mutations, Actions> */({
+const store = new Store/* <IState, GettersTree, Mutations, Actions> */({
   state: {
     count: 0
   },
