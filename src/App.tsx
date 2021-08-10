@@ -137,6 +137,12 @@ class CClass extends ReactiveComponent<{}> {
   }
 }
 
+const CWrap: React.FC<{}> = function () {
+  return useRender(() => {
+    return <>{store.state.mountC ? <C /> : null}</>
+  })
+}
+
 const App: React.FC<{}> = function () {
   const data = useData(() => {
     return {
@@ -152,7 +158,7 @@ const App: React.FC<{}> = function () {
     }
   })
 
-  return useRender(() => <>
+  return <>
     <button onClick={data.onClick}>+</button>
     <button onClick={data.onClick2}>x</button>
     <button onClick={data.toggleC}>toggleC</button>
@@ -160,9 +166,9 @@ const App: React.FC<{}> = function () {
     <AClass />
     <B />
     <BClass />
-    {store.state.mountC ? <C /> : null}
+    <CWrap />
     <CClass />
-  </>)
+  </>
 }
 
 export default App
