@@ -17,7 +17,14 @@ export type Actions<A extends IActionsTree<any, any, any, any>> = { [K in keyof 
 
 export type GetterHandler<S extends object, G extends IGettersTree<S, G>, R> = (state: S, getters: Getters<G>) => R
 export type MutationHandler<S extends object, P extends [any?]> = (...args: [S, ...P]) => void
-export type ActionHandler<C extends IActionContext<any, any, any, any>, P extends [any?], R> = (...args: [C, ...P]) => Promise<R>
+export type ActionHandler<
+  S extends object,
+  G extends IGettersTree<S, G>,
+  M extends IMutationsTree<S>,
+  A extends IActionsTree<S, G, M, A>,
+  P extends [any?],
+  R
+> = (...args: [IActionContext<S, G, M, A>, ...P]) => Promise<R>
 
 export interface IGettersTree<S extends object, G extends IGettersTree<S, G>> {
   [x: string]: GetterHandler<S, G, any>
@@ -35,7 +42,7 @@ export interface IActionContext<S extends object, G extends IGettersTree<S, G>, 
 }
 
 export interface IActionsTree<S extends object, G extends IGettersTree<S, G>, M extends IMutationsTree<S>, A extends IActionsTree<S, G, M, A>> {
-  [x: string]: ActionHandler<IActionContext<S, G, M, A>, [any?], any>
+  [x: string]: ActionHandler<S, G, M, A, [any?], any>
 }
 
 export interface IStoreBase<S extends object, G extends IGettersTree<S, G>> {
@@ -70,11 +77,11 @@ class StoreImpl<S extends object, G extends IGettersTree<S, G>> {
   public getters!: Getters<G>
   public data!: IObservedData<S>
 
-  public constructor (state: S, getters?: G) {
-    this.resetState(state, getters, false)
+  public constructor (store: Store<S, G, any, any>, state: S, getters?: G) {
+    this.resetState(store, state, getters, false)
   }
 
-  public resetState (state: S, getters?: G, hot?: boolean): void {
+  public resetState (store: Store<S, G, any, any>, state: S, getters?: G, hot?: boolean): void {
     this.getters = Object.create(null)
     const oldData = this.data
     const proxy: IObservedData<S> = reactive({ $$state: state }) as IObservedData<S>
@@ -84,7 +91,7 @@ class StoreImpl<S extends object, G extends IGettersTree<S, G>> {
         Object.defineProperty(this.getters, key, {
           get: () => {
             if (!computedRef) {
-              computedRef = computed(() => getters[key](proxy.$$state, this.getters))
+              computedRef = computed(() => getters[key].call(store, proxy.$$state, this.getters))
             }
             return computedRef.value
           },
@@ -113,7 +120,7 @@ export class Store<S extends object, G extends IGettersTree<S, G>, M extends IMu
       configurable: true,
       enumerable: false,
       writable: true,
-      value: new StoreImpl(options.state, options.getters)
+      value: new StoreImpl(this, options.state, options.getters)
     })
 
     Object.defineProperty(this, 'mutations', {
@@ -129,7 +136,7 @@ export class Store<S extends object, G extends IGettersTree<S, G>, M extends IMu
     if (options.mutations) {
       Object.keys(options.mutations).forEach((key: keyof typeof options.mutations) => {
         this.mutations[key] = (payload) => {
-          options.mutations![key](this.state, payload)
+          options.mutations![key].call(this, this.state, payload)
         }
       })
     }
@@ -142,7 +149,7 @@ export class Store<S extends object, G extends IGettersTree<S, G>, M extends IMu
       }
       Object.keys(options.actions).forEach((key: keyof typeof options.actions) => {
         this.actions[key] = (payload) => {
-          return options.actions![key](context, payload) as ReturnType<A[keyof typeof options.actions]>
+          return options.actions![key].call(this, context, payload) as ReturnType<A[keyof typeof options.actions]>
         }
       })
     }
@@ -162,7 +169,7 @@ export class Store<S extends object, G extends IGettersTree<S, G>, M extends IMu
 
   public hotUpdate (options?: { getters?: G }): void {
     if (options?.getters) {
-      this.__impl.resetState(this.state, options.getters, true)
+      this.__impl.resetState(this, this.state, options.getters, true)
     }
   }
 

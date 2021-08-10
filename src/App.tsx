@@ -3,7 +3,7 @@ import { ref, computed, ReactiveEffect } from '@vue/reactivity'
 import { useRender, useMutable, untrack, track, deref } from './lib'
 import type { ReactiveComponentContext } from './lib'
 import { Store } from './lib/store'
-/* import type { IActionContext, GetterHandler, MutationHandler, ActionHandler } from './lib/store'
+/* import type { GetterHandler, MutationHandler, ActionHandler } from './lib/store'
 
 interface IState {
   count: number
@@ -19,7 +19,7 @@ type Mutations = {
 }
 
 type Actions = {
-  multi: ActionHandler<IActionContext<IState, GettersTree, Mutations, Actions>, [string?], void>
+  multi: ActionHandler<IState, GettersTree, Mutations, Actions, [string?], void>
 } */
 
 const store = new Store/* <IState, GettersTree, Mutations, Actions> */({

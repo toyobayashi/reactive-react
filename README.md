@@ -152,11 +152,11 @@ class StoreImpl {
   // getters
   // data
 
-  constructor (state, getters) {
-    this.resetState(state, getters, false)
+  constructor (store, state, getters) {
+    this.resetState(store, state, getters, false)
   }
 
-  resetState (state, getters, hot) {
+  resetState (store, state, getters, hot) {
     this.getters = Object.create(null)
     const oldData = this.data
     const proxy = reactive({ $$state: state })
@@ -166,7 +166,9 @@ class StoreImpl {
         Object.defineProperty(this.getters, key, {
           get: () => {
             if (!computedRef) {
-              computedRef = computed(() => getters[key](proxy.$$state, this.getters))
+              computedRef = computed(() =>
+                getters[key].call(store, proxy.$$state, this.getters)
+              )
             }
             return computedRef.value
           },
@@ -194,7 +196,7 @@ class Store {
       configurable: true,
       enumerable: false,
       writable: true,
-      value: new StoreImpl(options.state, options.getters)
+      value: new StoreImpl(this, options.state, options.getters)
     })
 
     Object.defineProperty(this, 'mutations', {
@@ -210,7 +212,7 @@ class Store {
     if (options.mutations) {
       Object.keys(options.mutations).forEach(key => {
         this.mutations[key] = (payload) => {
-          options.mutations[key](this.state, payload)
+          options.mutations[key].call(this, this.state, payload)
         }
       })
     }
@@ -223,7 +225,7 @@ class Store {
       }
       Object.keys(options.actions).forEach(key => {
         this.actions[key] = (payload) =>
-          options.actions[key](context, payload)
+          options.actions[key].call(this, context, payload)
       })
     }
   }
