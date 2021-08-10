@@ -180,7 +180,7 @@ class Counter extends ReactiveComponent {
 ## 实现简易版的 Vuex
 
 ```js
-import { reactive, computed } from '@vue/reactivity'
+import { reactive, computed, effectScope } from '@vue/reactivity'
 
 class StoreImpl {
   // getters
