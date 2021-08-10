@@ -106,6 +106,9 @@ export class Store<S extends object, G extends IGettersTree<S, G>, M extends IMu
   public readonly actions!: Actions<A>
 
   public constructor (options: IStoreOptions<S, G, M, A>) {
+    if (!options || !options.state) {
+      throw new TypeError('missing state option')
+    }
     Object.defineProperty(this, '__impl', {
       configurable: true,
       enumerable: false,
