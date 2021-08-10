@@ -70,7 +70,7 @@ function useMutable (factory) {
   return ref.current
 }
 
-export function useData (factory) {
+function useData (factory) {
   const scope = useMutable(() => effectScope())
   const data = useMutable(() => scope.run(factory))
   React.useEffect(() => () => {
