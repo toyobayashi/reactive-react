@@ -34,11 +34,11 @@ function track (context, renderFunction) {
 其中响应式组件上下文 `context` 长这样：
 
 ```ts
-import type { ReactiveEffect } from '@vue/reactivity'
+import type { ReactiveEffectRunner } from '@vue/reactivity'
 import type { ReactNode } from 'react'
 
 declare interface ReactiveComponentContext {
-  $$reactiveRender: ReactiveEffect<ReactNode> | null
+  $$reactiveRender: ReactiveEffectRunner<ReactNode> | null
   forceUpdate (callback?: () => void): void
 }
 ```

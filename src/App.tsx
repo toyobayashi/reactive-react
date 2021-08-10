@@ -1,5 +1,6 @@
 import * as React from 'react'
-import { ref, computed, ReactiveEffect } from '@vue/reactivity'
+import { ref, computed } from '@vue/reactivity'
+import type { ReactiveEffectRunner } from '@vue/reactivity'
 import { useRender, useMutable, untrack, track, deref } from './lib'
 import type { ReactiveComponentContext } from './lib'
 import { Store } from './lib/store'
@@ -59,7 +60,7 @@ const A: React.FC<{}> = function () {
 }
 
 class AClass extends React.Component<{}> implements ReactiveComponentContext {
-  $$reactiveRender: ReactiveEffect<React.ReactNode> | null = null
+  $$reactiveRender: ReactiveEffectRunner<React.ReactNode> | null = null
 
   render () {
     console.log('[render] AClass')
@@ -80,7 +81,7 @@ const B: React.FC<{}> = function () {
 }
 
 class BClass extends React.Component<{}> implements ReactiveComponentContext {
-  $$reactiveRender: ReactiveEffect<React.ReactNode> | null = null
+  $$reactiveRender: ReactiveEffectRunner<React.ReactNode> | null = null
   doubleCount = computed(() => store.state.count * 2)
 
   render () {
@@ -114,7 +115,7 @@ const C: React.FC<{}> = function () {
 }
 
 class CClass extends React.Component<{}> implements ReactiveComponentContext {
-  $$reactiveRender: ReactiveEffect<React.ReactNode> | null = null
+  $$reactiveRender: ReactiveEffectRunner<React.ReactNode> | null = null
   localCount = ref(0)
   localDoubleCount = computed(() => deref(this.localCount) * 2)
   onClick = () => { this.localCount.value++ }
