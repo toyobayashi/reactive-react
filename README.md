@@ -75,7 +75,7 @@ export function useData (factory) {
   const data = useMutable(() => scope.run(factory))
   React.useEffect(() => () => {
     scope.stop()
-  }, [])
+  }, emptyDepList)
   return data
 }
 

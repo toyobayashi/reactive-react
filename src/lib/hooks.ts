@@ -28,7 +28,7 @@ export function useData<T extends object> (factory: () => T): T {
   const data = useMutable(() => scope.run(factory) as T)
   useEffect(() => () => {
     scope.stop()
-  }, [])
+  }, emptyDepList)
   return data
 }
 
