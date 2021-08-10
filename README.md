@@ -49,7 +49,7 @@ declare interface ReactiveComponentContext {
 
 ```js
 import * as React from 'react'
-import { ref, computed } from '@vue/reactivity'
+import { ref, computed, effectScope } from '@vue/reactivity'
 
 const emptyDepList = []
 
@@ -68,6 +68,15 @@ function useMutable (factory) {
     ref.current = maybeObject
   }
   return ref.current
+}
+
+export function useData (factory) {
+  const scope = useMutable(() => effectScope())
+  const data = useMutable(() => scope.run(factory))
+  React.useEffect(() => () => {
+    scope.stop()
+  }, [])
+  return data
 }
 
 function useReactiveContext () {
@@ -90,7 +99,7 @@ function useRender (jsxFac) {
 }
 
 function Counter () {
-  const data = useMutable(() => {
+  const data = useData(() => {
     const localCount = ref(0)
     const localDoubleCount = computed(() => localCount.value * 2)
     const onClick = () => {
@@ -113,32 +122,57 @@ function Counter () {
 
 ```js
 import * as React from 'react'
-import { ref, computed } from '@vue/reactivity'
+import { ref, computed, effectScope } from '@vue/reactivity'
 
-class Counter extends React.Component {
+class ReactiveComponent extends React.Component {
   constructor (props) {
     super(props)
-
     // 组件实例本身当成响应式组件上下文
     this.$$reactiveRender = null
+    // 响应式效果作用域
+    this.$$scope = effectScope()
+    this.$$scope.run(this.onCreateReactiveData.bind(this))
+  }
 
-    this.localCount = ref(0)
-    this.localDoubleCount = computed(() => this.localCount.value * 2)
+  // @virtual
+  onCreateReactiveData () {}
+
+  renderReactive (render) {
+    return track(this, render)
+  }
+
+  componentWillUnmount () {
+    this.$$scope.stop()
+    untrack(this)
+  }
+}
+
+class Counter extends ReactiveComponent {
+  constructor (props) {
+    super(props) // onCreateReactiveData 被调用
+
     this.onClick = () => {
       this.localCount.value++
     }
   }
 
+  onCreateReactiveData () {
+    // 组件被卸载时清除所有收集到的响应式效果
+    this.localCount = ref(0)
+    this.localDoubleCount = computed(() => this.localCount.value * 2)
+  }
+
   render () {
     // 每次渲染重新依赖收集
-    return track(this, () => {
+    return this.renderReactive(() => {
       return <div>{this.localCount.value} * 2 = {this.localDoubleCount.value} <button onClick={this.onClick}>Local +</button></div>
     })
   }
 
   componentWillUnmount () {
-    // 组件销毁取消监听
-    untrack(this)
+    // ...
+    // 最后要调用父类的 componentWillUnmount
+    super.componentWillUnmount()
   }
 })
 ```

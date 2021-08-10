@@ -2,8 +2,7 @@ import { useState, useCallback, useRef, useEffect, ReactElement } from 'react'
 import type { DependencyList } from 'react'
 import type { ReactiveComponentContext, RenderFunction } from './types'
 import { untrack, track } from './core'
-import { computed, reactive } from '@vue/reactivity'
-import type { UnwrapNestedRefs, ComputedRef } from '@vue/reactivity'
+import { effectScope } from '@vue/reactivity'
 
 const emptyDepList: DependencyList = []
 
@@ -24,6 +23,15 @@ export function useMutable<T extends object> (factory: () => T): T {
   return ref.current
 }
 
+export function useData<T extends object> (factory: () => T): T {
+  const scope = useMutable(() => effectScope())
+  const data = useMutable(() => scope.run(factory) as T)
+  useEffect(() => () => {
+    scope.stop()
+  }, [])
+  return data
+}
+
 export function useReactiveContext (): ReactiveComponentContext {
   const forceUpdate = useForceUpdate()
   return useMutable(() => ({
@@ -37,12 +45,4 @@ export function useRender (jsxFac: RenderFunction): ReactElement<any, any> | nul
   useEffect(() => () => { untrack(context) }, emptyDepList)
 
   return track(context, jsxFac) as ReactElement<any, any>
-}
-
-export function useReactive<T extends object> (factory: () => T): UnwrapNestedRefs<T> {
-  return useMutable(() => reactive(factory()))
-}
-
-export function useComputed<T> (factory: () => T): ComputedRef<T> {
-  return useMutable(() => computed(factory))
 }

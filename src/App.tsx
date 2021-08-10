@@ -1,8 +1,7 @@
 import * as React from 'react'
 import { ref, computed } from '@vue/reactivity'
-import type { ReactiveEffectRunner } from '@vue/reactivity'
-import { useRender, useMutable, untrack, track, deref } from './lib'
-import type { ReactiveComponentContext } from './lib'
+import type { Ref, ComputedRef } from '@vue/reactivity'
+import { useRender, useData, deref, ReactiveComponent } from './lib'
 import { Store } from './lib/store'
 /* import type { GetterHandler, MutationHandler, ActionHandler } from './lib/store'
 
@@ -25,7 +24,8 @@ type Actions = {
 
 const store = new Store/* <IState, GettersTree, Mutations, Actions> */({
   state: {
-    count: 0
+    count: 0,
+    mountC: true
   },
   getters: {
     doubleCount (state) {
@@ -38,6 +38,9 @@ const store = new Store/* <IState, GettersTree, Mutations, Actions> */({
     },
     multi (state, value: number = 2) {
       state.count *= value
+    },
+    toggleC (state) {
+      state.mountC = !state.mountC
     }
   },
   actions: {
@@ -59,44 +62,41 @@ const A: React.FC<{}> = function () {
   )
 }
 
-class AClass extends React.Component<{}> implements ReactiveComponentContext {
-  $$reactiveRender: ReactiveEffectRunner<React.ReactNode> | null = null
-
+class AClass extends ReactiveComponent<{}> {
   render () {
     console.log('[render] AClass')
-    return track(this, () => <div>AClass: {store.state.count}</div>)
-  }
-
-  componentWillUnmount () {
-    untrack(this)
+    return this.renderReactive(() => <div>AClass: {store.state.count}</div>)
   }
 }
 
 const B: React.FC<{}> = function () {
   console.log('[render] B')
-  const doubleCount = useMutable(() => computed(() => store.state.count * 2))
+  const doubleCount = useData(() => computed(() => store.state.count * 2))
   return useRender(() =>
     <div>B: {deref(doubleCount)}</div>
   )
 }
 
-class BClass extends React.Component<{}> implements ReactiveComponentContext {
-  $$reactiveRender: ReactiveEffectRunner<React.ReactNode> | null = null
-  doubleCount = computed(() => store.state.count * 2)
+class BClass extends ReactiveComponent<{}> {
+  doubleCount!: ComputedRef<number>
 
   render () {
     console.log('[render] BClass')
-    return track(this, () => <div>BClass: {deref(this.doubleCount)}</div>)
+    return this.renderReactive(() => <div>BClass: {deref(this.doubleCount)}</div>)
+  }
+
+  onCreateReactiveData () {
+    this.doubleCount = computed(() => store.state.count * 2)
   }
 
   componentWillUnmount () {
-    untrack(this)
+    super.componentWillUnmount()
   }
 }
 
 const C: React.FC<{}> = function () {
   console.log('[render] C')
-  const data = useMutable(() => {
+  const data = useData(() => {
     const localCount = ref(0)
     const localDoubleCount = computed(() => deref(localCount) * 2)
     const onClick = () => {
@@ -114,46 +114,55 @@ const C: React.FC<{}> = function () {
   )
 }
 
-class CClass extends React.Component<{}> implements ReactiveComponentContext {
-  $$reactiveRender: ReactiveEffectRunner<React.ReactNode> | null = null
-  localCount = ref(0)
-  localDoubleCount = computed(() => deref(this.localCount) * 2)
+class CClass extends ReactiveComponent<{}> {
+  localCount!: Ref<number>
+  localDoubleCount!: ComputedRef<number>
   onClick = () => { this.localCount.value++ }
+
+  onCreateReactiveData () {
+    this.localCount = ref(0)
+    this.localDoubleCount = computed(() => deref(this.localCount) * 2)
+  }
 
   render () {
     console.log('[render] CClass')
-    return track(this, () => {
-      return <div>C: {deref(this.localCount)} * 2 = {deref(this.localDoubleCount)} <button onClick={this.onClick}>Local +</button></div>
+    return this.renderReactive(() => {
+      return <div>CClass: {deref(this.localCount)} * 2 = {deref(this.localDoubleCount)} <button onClick={this.onClick}>Local +</button></div>
     })
   }
 
   componentWillUnmount () {
-    untrack(this)
+    // ...
+    super.componentWillUnmount()
   }
 }
 
 const App: React.FC<{}> = function () {
-  const data = useMutable(() => {
+  const data = useData(() => {
     return {
       onClick: () => {
         store.mutations.add()
       },
       onClick2: () => {
         store.actions.multi()
+      },
+      toggleC: () => {
+        store.mutations.toggleC()
       }
     }
   })
 
-  return <>
+  return useRender(() => <>
     <button onClick={data.onClick}>+</button>
     <button onClick={data.onClick2}>x</button>
+    <button onClick={data.toggleC}>toggleC</button>
     <A />
     <AClass />
     <B />
     <BClass />
-    <C />
+    {store.state.mountC ? <C /> : null}
     <CClass />
-  </>
+  </>)
 }
 
 export default App
