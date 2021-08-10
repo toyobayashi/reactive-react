@@ -142,3 +142,113 @@ class Counter extends React.Component {
   }
 })
 ```
+
+## 实现简易版的 Vuex
+
+```js
+import { reactive, computed } from '@vue/reactivity'
+
+class StoreImpl {
+  // getters
+  // data
+
+  constructor (state, getters) {
+    this.resetState(state, getters, false)
+  }
+
+  resetState (state, getters, hot) {
+    this.getters = Object.create(null)
+    const oldData = this.data
+    const proxy = reactive({ $$state: state })
+    if (getters) {
+      Object.keys(getters).forEach((key) => {
+        let computedRef
+        Object.defineProperty(this.getters, key, {
+          get: () => {
+            if (!computedRef) {
+              computedRef = computed(() => getters[key](proxy.$$state, this.getters))
+            }
+            return computedRef.value
+          },
+          enumerable: true
+        })
+      })
+    }
+    this.data = proxy
+    if (oldData && hot) {
+      oldData.$$state = null
+    }
+  }
+}
+
+class Store {
+  // __impl
+  // mutations
+  // actions
+
+  constructor (options) {
+    if (!options || !options.state) {
+      throw new TypeError('missing state option')
+    }
+    Object.defineProperty(this, '__impl', {
+      configurable: true,
+      enumerable: false,
+      writable: true,
+      value: new StoreImpl(options.state, options.getters)
+    })
+
+    Object.defineProperty(this, 'mutations', {
+      configurable: true,
+      value: Object.create(null)
+    })
+
+    Object.defineProperty(this, 'actions', {
+      configurable: true,
+      value: Object.create(null)
+    })
+
+    if (options.mutations) {
+      Object.keys(options.mutations).forEach(key => {
+        this.mutations[key] = (payload) => {
+          options.mutations[key](this.state, payload)
+        }
+      })
+    }
+    if (options.actions) {
+      const context = {
+        state: this.state,
+        getters: this.getters,
+        commit: this.commit.bind(this),
+        dispatch: this.dispatch.bind(this)
+      }
+      Object.keys(options.actions).forEach(key => {
+        this.actions[key] = (payload) =>
+          options.actions[key](context, payload)
+      })
+    }
+  }
+
+  get state () {
+    return this.__impl.data.$$state
+  }
+
+  get getters () {
+    return this.__impl.getters
+  }
+
+  commit (type, payload) {
+    if (typeof this.mutations[type] === 'function') {
+      this.mutations[type](payload)
+    } else {
+      throw new Error('unknown mutation: ' + type)
+    }
+  }
+
+  dispatch (act, payload) {
+    if (typeof this.actions[act] === 'function') {
+      return this.actions[act](payload)
+    }
+    return Promise.reject(new Error('unknown action: ' + act))
+  }
+}
+```
