@@ -191,6 +191,8 @@ class StoreImpl {
   }
 
   resetState (store, state, getters, hot) {
+    if (this._scope) this._scope.stop()
+    this._scope = effectScope()
     this.getters = Object.create(null)
     const oldData = this.data
     const proxy = reactive({ $$state: state })
@@ -200,9 +202,9 @@ class StoreImpl {
         Object.defineProperty(this.getters, key, {
           get: () => {
             if (!computedRef) {
-              computedRef = computed(() =>
-                getters[key].call(store, proxy.$$state, this.getters)
-              )
+              computedRef = this._scope.run(() => {
+                return computed(() => getters[key].call(store, proxy.$$state, this.getters))
+              })
             }
             return computedRef.value
           },
@@ -214,6 +216,15 @@ class StoreImpl {
     if (oldData && hot) {
       oldData.$$state = null
     }
+  }
+
+  dispose () {
+    if (this._disposed) return
+    if (this._scope) this._scope.stop()
+    this._scope = null!
+    this.getters = null!
+    this.data = null!
+    this._disposed = true
   }
 }
 
@@ -285,6 +296,15 @@ class Store {
       return this.actions[act](payload)
     }
     return Promise.reject(new Error('unknown action: ' + act))
+  }
+
+  dispose (): void {
+    if (this.__impl) {
+      this.__impl.dispose()
+      this.__impl = null
+      this.mutations = null
+      this.actions = null
+    }
   }
 }
 ```

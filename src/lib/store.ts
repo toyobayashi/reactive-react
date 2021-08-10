@@ -1,4 +1,4 @@
-import { reactive, computed } from '@vue/reactivity'
+import { reactive, computed, effectScope, EffectScope } from '@vue/reactivity'
 import type { ComputedRef } from '@vue/reactivity'
 
 export type Payload<T> = T extends undefined ? void : T
@@ -76,12 +76,16 @@ interface IObservedData<T> {
 class StoreImpl<S extends object, G extends IGettersTree<S, G>> {
   public getters!: Getters<G>
   public data!: IObservedData<S>
+  private _scope!: EffectScope
+  private _disposed = false
 
   public constructor (store: Store<S, G, any, any>, state: S, getters?: G) {
     this.resetState(store, state, getters, false)
   }
 
   public resetState (store: Store<S, G, any, any>, state: S, getters?: G, hot?: boolean): void {
+    this._scope?.stop()
+    this._scope = effectScope()
     this.getters = Object.create(null)
     const oldData = this.data
     const proxy: IObservedData<S> = reactive({ $$state: state }) as IObservedData<S>
@@ -91,7 +95,9 @@ class StoreImpl<S extends object, G extends IGettersTree<S, G>> {
         Object.defineProperty(this.getters, key, {
           get: () => {
             if (!computedRef) {
-              computedRef = computed(() => getters[key].call(store, proxy.$$state, this.getters))
+              computedRef = this._scope.run(() => {
+                return computed(() => getters[key].call(store, proxy.$$state, this.getters))
+              })!
             }
             return computedRef.value
           },
@@ -104,11 +110,20 @@ class StoreImpl<S extends object, G extends IGettersTree<S, G>> {
       oldData.$$state = null!
     }
   }
+
+  public dispose (): void {
+    if (this._disposed) return
+    this._scope?.stop()
+    this._scope = null!
+    this.getters = null!
+    this.data = null!
+    this._disposed = true
+  }
 }
 
 
 export class Store<S extends object, G extends IGettersTree<S, G>, M extends IMutationsTree<S>, A extends IActionsTree<S, G, M, A>> implements IStore<S, G, M, A> {
-  private readonly __impl!: StoreImpl<S, G>
+  private __impl!: StoreImpl<S, G>
   public readonly mutations!: Mutations<M>
   public readonly actions!: Actions<A>
 
@@ -195,5 +210,14 @@ export class Store<S extends object, G extends IGettersTree<S, G>, M extends IMu
   // @override
   public toString (): string {
     return JSON.stringify(this.toJSON())
+  }
+
+  public dispose (): void {
+    if (this.__impl) {
+      this.__impl.dispose()
+      this.__impl = null!;
+      (this as any).mutations = null;
+      (this as any).actions = null
+    }
   }
 }
