@@ -73,29 +73,23 @@ function useMutable (factory) {
 function useData (factory) {
   const scope = useMutable(() => effectScope())
   const data = useMutable(() => scope.run(factory))
-  React.useEffect(() => () => {
-    scope.stop()
-  }, emptyDepList)
+  React.useEffect(() => () => { scope.stop() }, emptyDepList)
   return data
 }
 
-function useReactiveContext () {
+function useRender (render) {
   const forceUpdate = useForceUpdate()
-  return useMutable(() => ({
+  // 响应式组件上下文
+  const context = useMutable(() => ({
     $$reactiveRender: null,
     forceUpdate
   }))
-}
-
-function useRender (jsxFac) {
-  // 响应式组件上下文
-  const context = useReactiveContext()
 
   // 组件销毁取消监听
   React.useEffect(() => () => { untrack(context) }, emptyDepList)
 
   // 每次渲染重新依赖收集
-  return track(context, jsxFac)
+  return track(context, render)
 }
 
 function Counter () {

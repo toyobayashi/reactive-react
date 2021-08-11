@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect, ReactElement } from 'react'
 import type { DependencyList } from 'react'
-import type { ReactiveComponentContext, RenderFunction } from './types'
+import type { RenderFunction } from './types'
 import { untrack, track } from './core'
 import { effectScope } from '@vue/reactivity'
 
@@ -26,23 +26,17 @@ export function useMutable<T extends object> (factory: () => T): T {
 export function useData<T extends object> (factory: () => T): T {
   const scope = useMutable(() => effectScope())
   const data = useMutable(() => scope.run(factory) as T)
-  useEffect(() => () => {
-    scope.stop()
-  }, emptyDepList)
+  useEffect(() => () => { scope.stop() }, emptyDepList)
   return data
 }
 
-export function useReactiveContext (): ReactiveComponentContext {
+export function useRender (render: RenderFunction): ReactElement<any, any> | null {
   const forceUpdate = useForceUpdate()
-  return useMutable(() => ({
+  const context = useMutable(() => ({
     $$reactiveRender: null,
     forceUpdate
   }))
-}
-
-export function useRender (jsxFac: RenderFunction): ReactElement<any, any> | null {
-  const context = useReactiveContext()
   useEffect(() => () => { untrack(context) }, emptyDepList)
 
-  return track(context, jsxFac) as ReactElement<any, any>
+  return track(context, render) as ReactElement<any, any>
 }
