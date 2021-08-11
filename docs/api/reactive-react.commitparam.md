@@ -8,7 +8,7 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type CommitParam<M> = M extends IMutationsTree<any> ? [MutationKey<M>, MutationPayload<M>?] : [string | number | symbol, any?];
+export declare type CommitParam<M, K extends keyof M> = M extends IMutationsTree<any> ? [K, ...MutationPayload<M, K>] : [string | number | symbol, any?];
 ```
-<b>References:</b> [IMutationsTree](./reactive-react.imutationstree.md)<!-- -->, [MutationKey](./reactive-react.mutationkey.md)<!-- -->, [MutationPayload](./reactive-react.mutationpayload.md)
+<b>References:</b> [IMutationsTree](./reactive-react.imutationstree.md)<!-- -->, [MutationPayload](./reactive-react.mutationpayload.md)
 

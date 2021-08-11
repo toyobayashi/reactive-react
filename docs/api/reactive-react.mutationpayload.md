@@ -8,7 +8,7 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type MutationPayload<M, K extends keyof M = keyof M> = M extends IMutationsTree<any> ? Payload<Parameters<M[K]>[1]> : any;
+export declare type MutationPayload<M, K extends keyof M = keyof M> = M extends IMutationsTree<any> ? Payload<SecondParam<M, K>> : any;
 ```
-<b>References:</b> [IMutationsTree](./reactive-react.imutationstree.md)<!-- -->, [Payload](./reactive-react.payload.md)
+<b>References:</b> [IMutationsTree](./reactive-react.imutationstree.md)<!-- -->, [Payload](./reactive-react.payload.md)<!-- -->, [SecondParam](./reactive-react.secondparam.md)
 

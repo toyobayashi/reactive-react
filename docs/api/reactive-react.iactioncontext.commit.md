@@ -7,14 +7,14 @@
 <b>Signature:</b>
 
 ```typescript
-commit(...args: CommitParam<M>): void;
+commit<K extends keyof M | string | number>(...args: CommitParam<M, K>): void;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  args | [CommitParam](./reactive-react.commitparam.md)<!-- -->&lt;M&gt; |  |
+|  args | [CommitParam](./reactive-react.commitparam.md)<!-- -->&lt;M, K&gt; |  |
 
 <b>Returns:</b>
 

@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-commit(type: keyof M, payload: Payload<Parameters<M[typeof type]>[1]>): void;
+commit(type: keyof M, ...payload: Payload<SecondParam<M, typeof type>>): void;
 ```
 
 ## Parameters
@@ -15,7 +15,7 @@ commit(type: keyof M, payload: Payload<Parameters<M[typeof type]>[1]>): void;
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  type | keyof M |  |
-|  payload | [Payload](./reactive-react.payload.md)<!-- -->&lt;Parameters&lt;M\[typeof type\]&gt;\[1\]&gt; |  |
+|  payload | [Payload](./reactive-react.payload.md)<!-- -->&lt;[SecondParam](./reactive-react.secondparam.md)<!-- -->&lt;M, typeof type&gt;&gt; |  |
 
 <b>Returns:</b>
 

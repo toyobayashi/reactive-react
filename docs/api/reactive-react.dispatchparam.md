@@ -8,7 +8,7 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type DispatchParam<A> = A extends IActionsTree<any, any, any, any> ? [ActionKey<A>, ActionPayload<A>?] : [string | number | symbol, any?];
+export declare type DispatchParam<A, K extends keyof A> = A extends IActionsTree<any, any, any, any> ? [K, ...ActionPayload<A, K>] : [string | number | symbol, any?];
 ```
-<b>References:</b> [IActionsTree](./reactive-react.iactionstree.md)<!-- -->, [ActionKey](./reactive-react.actionkey.md)<!-- -->, [ActionPayload](./reactive-react.actionpayload.md)
+<b>References:</b> [IActionsTree](./reactive-react.iactionstree.md)<!-- -->, [ActionPayload](./reactive-react.actionpayload.md)
 

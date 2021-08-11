@@ -2,10 +2,11 @@ import * as React from 'react'
 import { ref, computed } from '@vue/reactivity'
 import type { Ref, ComputedRef } from '@vue/reactivity'
 import { useRender, useData, ReactiveComponent, Store } from '../..'
-/* import type { GetterHandler, MutationHandler, ActionHandler } from './lib/store'
+/* import type { GetterHandler, MutationHandler, ActionHandler } from '../..'
 
 interface IState {
   count: number
+  mountC: boolean
 }
 
 type GettersTree = {
@@ -15,10 +16,11 @@ type GettersTree = {
 type Mutations = {
   add: MutationHandler<IState, [number?]>
   multi: MutationHandler<IState, [number?]>
+  toggleC: MutationHandler<IState, []>
 }
 
 type Actions = {
-  multi: ActionHandler<IState, GettersTree, Mutations, Actions, [string?], void>
+  multi: ActionHandler<IState, GettersTree, Mutations, Actions, [number?], void>
 } */
 
 const store = new Store/* <IState, GettersTree, Mutations, Actions> */({
@@ -43,10 +45,10 @@ const store = new Store/* <IState, GettersTree, Mutations, Actions> */({
     }
   },
   actions: {
-    multi ({ commit }) {
+    multi ({ commit }, value: number = 2) {
       return new Promise<void>((resolve) => {
         setTimeout(() => {
-          commit('multi')
+          commit('multi', value)
           resolve()
         }, 200)
       })
@@ -72,7 +74,7 @@ const B: React.FC<{}> = function () {
   console.log('[render] B')
   const doubleCount = useData(() => computed(() => store.state.count * 2))
   return useRender(() =>
-    <div>B: {deref(doubleCount)}</div>
+    <div>B: {deref(doubleCount)}, B: {store.getters.doubleCount}</div>
   )
 }
 

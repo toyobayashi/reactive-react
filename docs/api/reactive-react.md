@@ -43,6 +43,7 @@
 |  [ActionHandler](./reactive-react.actionhandler.md) |  |
 |  [ActionKey](./reactive-react.actionkey.md) |  |
 |  [ActionPayload](./reactive-react.actionpayload.md) |  |
+|  [ActionReturnType](./reactive-react.actionreturntype.md) |  |
 |  [Actions](./reactive-react.actions.md) |  |
 |  [CommitParam](./reactive-react.commitparam.md) |  |
 |  [DispatchParam](./reactive-react.dispatchparam.md) |  |
@@ -55,4 +56,5 @@
 |  [Mutations](./reactive-react.mutations.md) |  |
 |  [Payload](./reactive-react.payload.md) |  |
 |  [RenderFunction](./reactive-react.renderfunction.md) |  |
+|  [SecondParam](./reactive-react.secondparam.md) |  |
 

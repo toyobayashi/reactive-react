@@ -8,7 +8,7 @@
 <b>Signature:</b>
 
 ```typescript
-export declare class Store<S extends object, G extends IGettersTree<S, G>, M extends IMutationsTree<S>, A extends IActionsTree<S, G, M, A>> implements IStore<S, G, M, A> 
+export declare class Store<S extends object, G extends IGettersTree<S, G> | {}, M extends IMutationsTree<S> | {}, A extends IActionsTree<S, G, M, A> | {}> implements IStore<S, G, M, A> 
 ```
 <b>Implements:</b> [IStore](./reactive-react.istore.md)<!-- -->&lt;S, G, M, A&gt;
 

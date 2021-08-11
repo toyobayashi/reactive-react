@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-dispatch(act: keyof A, payload: Payload<Parameters<A[typeof act]>[1]>): ReturnType<A[typeof act]>;
+dispatch(act: keyof A, ...payload: Payload<SecondParam<A, typeof act>>): ActionReturnType<A, typeof act>;
 ```
 
 ## Parameters
@@ -15,9 +15,9 @@ dispatch(act: keyof A, payload: Payload<Parameters<A[typeof act]>[1]>): ReturnTy
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  act | keyof A |  |
-|  payload | [Payload](./reactive-react.payload.md)<!-- -->&lt;Parameters&lt;A\[typeof act\]&gt;\[1\]&gt; |  |
+|  payload | [Payload](./reactive-react.payload.md)<!-- -->&lt;[SecondParam](./reactive-react.secondparam.md)<!-- -->&lt;A, typeof act&gt;&gt; |  |
 
 <b>Returns:</b>
 
-ReturnType&lt;A\[typeof act\]&gt;
+[ActionReturnType](./reactive-react.actionreturntype.md)<!-- -->&lt;A, typeof act&gt;
 

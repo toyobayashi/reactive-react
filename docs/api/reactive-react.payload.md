@@ -8,5 +8,5 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type Payload<T> = T extends undefined ? void : T;
+export declare type Payload<T> = T extends undefined ? [] : [T];
 ```

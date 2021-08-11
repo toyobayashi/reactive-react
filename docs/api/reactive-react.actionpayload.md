@@ -8,7 +8,7 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type ActionPayload<A, K extends keyof A = keyof A> = A extends IActionsTree<any, any, any, any> ? Payload<Parameters<A[K]>[1]> : any;
+export declare type ActionPayload<A, K extends keyof A = keyof A> = A extends IActionsTree<any, any, any, any> ? Payload<SecondParam<A, K>> : any;
 ```
-<b>References:</b> [IActionsTree](./reactive-react.iactionstree.md)<!-- -->, [Payload](./reactive-react.payload.md)
+<b>References:</b> [IActionsTree](./reactive-react.iactionstree.md)<!-- -->, [Payload](./reactive-react.payload.md)<!-- -->, [SecondParam](./reactive-react.secondparam.md)
 

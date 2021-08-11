@@ -2,31 +2,40 @@ import { reactive, computed, effectScope, EffectScope } from '@vue/reactivity'
 import type { ComputedRef } from '@vue/reactivity'
 
 /** @public */
+export type SecondParam<T, K extends keyof T> = T extends Record<string, (...args: any[]) => any>
+  ? Parameters<T[K]>[1]
+  : never
+
+/** @public */
+export type ActionReturnType<T, K extends string | number | keyof T> = T extends IActionsTree<any, any, any, any>
+  ? Promise<T[K]>
+  : Promise<any>
+
+/** @public */
 export type Payload<T> = T extends undefined
-  // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-  ? void
-  : T
+  ? []
+  : [T]
 
 /** @public */
 export type MutationKey<M> = M extends IMutationsTree<any> ? keyof M : (string | number | symbol)
 /** @public */
-export type MutationPayload<M, K extends keyof M = keyof M> = M extends IMutationsTree<any> ? Payload<Parameters<M[K]>[1]> : any
+export type MutationPayload<M, K extends keyof M = keyof M> = M extends IMutationsTree<any> ? Payload<SecondParam<M, K>> : any
 /** @public */
 export type ActionKey<A> = A extends IActionsTree<any, any, any, any> ? keyof A : (string | number | symbol)
 /** @public */
-export type ActionPayload<A, K extends keyof A = keyof A> = A extends IActionsTree<any, any, any, any> ? Payload<Parameters<A[K]>[1]> : any
+export type ActionPayload<A, K extends keyof A = keyof A> = A extends IActionsTree<any, any, any, any> ? Payload<SecondParam<A, K>> : any
 
 /** @public */
-export type CommitParam<M> = M extends IMutationsTree<any> ? [MutationKey<M>, MutationPayload<M>?] : [string | number | symbol, any?]
+export type CommitParam<M, K extends keyof M> = M extends IMutationsTree<any> ? [K, ...MutationPayload<M, K>] : [string | number | symbol, any?]
 /** @public */
-export type DispatchParam<A> = A extends IActionsTree<any, any, any, any> ? [ActionKey<A>, ActionPayload<A>?] : [string | number | symbol, any?]
+export type DispatchParam<A, K extends keyof A> = A extends IActionsTree<any, any, any, any> ? [K, ...ActionPayload<A, K>] : [string | number | symbol, any?]
 
 /** @public */
 export type Getters<G> = G extends IGettersTree<any, any> ? { [K in keyof G]: ReturnType<G[K]> } : Record<string, any>
 /** @public */
-export type Mutations<M extends IMutationsTree<any>> = { [K in keyof M]: (payload: Payload<Parameters<M[K]>[1]>) => void }
+export type Mutations<M extends IMutationsTree<any>> = { [K in keyof M]: (...payload: Payload<SecondParam<M, K>>) => void }
 /** @public */
-export type Actions<A extends IActionsTree<any, any, any, any>> = { [K in keyof A]: (payload: Payload<Parameters<A[K]>[1]>) => ReturnType<A[K]> }
+export type Actions<A extends IActionsTree<any, any, any, any>> = { [K in keyof A]: (...payload: Payload<SecondParam<A, K>>) => ActionReturnType<A, K> }
 
 /** @public */
 export type GetterHandler<S extends object, G extends IGettersTree<S, G>, R> = (state: S, getters: Getters<G>) => R
@@ -56,8 +65,8 @@ export interface IMutationsTree<S extends object> {
 export interface IActionContext<S extends object, G extends IGettersTree<S, G>, M extends IMutationsTree<S>, A extends IActionsTree<S, G, M, A>> {
   state: S
   getters: Getters<G>
-  commit (...args: CommitParam<M>): void
-  dispatch (...args: DispatchParam<A>): ReturnType<A[typeof args[0]]>
+  commit<K extends keyof M | string | number> (...args: CommitParam<M, K>): void
+  dispatch<K extends keyof A | string | number> (...args: DispatchParam<A, K>): ActionReturnType<A, typeof args[0]>
 }
 
 /** @public */
@@ -78,8 +87,8 @@ export interface IStore<S extends object, G extends IGettersTree<S, G>, M extend
 
   replaceState (state: S): void
   hotUpdate (options?: { getters?: G }): void
-  commit (type: keyof M, payload: Payload<Parameters<M[typeof type]>[1]>): void
-  dispatch (act: keyof A, payload: Payload<Parameters<A[typeof act]>[1]>): ReturnType<A[typeof act]>
+  commit (type: keyof M, ...payload: Payload<SecondParam<M, typeof type>>): void
+  dispatch (act: keyof A, ...payload: Payload<SecondParam<A, typeof act>>): ActionReturnType<A, typeof act>
   toJSON (): IStoreBase<S, G>
   toString (): string
 }
@@ -145,7 +154,7 @@ class StoreImpl<S extends object, G extends IGettersTree<S, G>> {
 }
 
 /** @public */
-export class Store<S extends object, G extends IGettersTree<S, G>, M extends IMutationsTree<S>, A extends IActionsTree<S, G, M, A>> implements IStore<S, G, M, A> {
+export class Store<S extends object, G extends IGettersTree<S, G> | {}, M extends IMutationsTree<S> | {}, A extends IActionsTree<S, G, M, A> | {}> implements IStore<S, G, M, A> {
   private __impl!: StoreImpl<S, G>
   public readonly mutations!: Mutations<M>
   public readonly actions!: Actions<A>
@@ -172,9 +181,9 @@ export class Store<S extends object, G extends IGettersTree<S, G>, M extends IMu
     })
 
     if (options.mutations) {
-      Object.keys(options.mutations).forEach((key: keyof typeof options.mutations) => {
-        this.mutations[key] = (payload) => {
-          options.mutations![key].call(this, this.state, payload)
+      Object.keys(options.mutations).forEach((key: string) => {
+        this.mutations[key as keyof M] = (...payload) => {
+          (options.mutations as IMutationsTree<S>)[key].call(this, this.state, payload[0])
         }
       })
     }
@@ -182,12 +191,12 @@ export class Store<S extends object, G extends IGettersTree<S, G>, M extends IMu
       const context: IActionContext<S, G, M, A> = {
         state: this.state,
         getters: this.getters,
-        commit: this.commit.bind(this) as (...args: CommitParam<M>) => void,
-        dispatch: this.dispatch.bind(this) as (...args: DispatchParam<A>) => ReturnType<A[typeof args[0]]>
+        commit: (this.commit as any).bind(this),
+        dispatch: (this.dispatch as any).bind(this)
       }
-      Object.keys(options.actions).forEach((key: keyof typeof options.actions) => {
-        this.actions[key] = (payload) => {
-          return options.actions![key].call(this, context, payload) as ReturnType<A[keyof typeof options.actions]>
+      Object.keys(options.actions).forEach((key: string) => {
+        this.actions[key as keyof A] = (...payload) => {
+          return (options.actions as IActionsTree<S, G, M, A>)[key].call(this, context, payload[0])
         }
       })
     }
@@ -211,19 +220,19 @@ export class Store<S extends object, G extends IGettersTree<S, G>, M extends IMu
     }
   }
 
-  public commit (type: keyof M, payload: Payload<Parameters<M[typeof type]>[1]>): void {
+  public commit (type: keyof M, ...payload: Payload<SecondParam<M, typeof type>>): void {
     if (typeof this.mutations[type] === 'function') {
-      this.mutations[type](payload)
+      this.mutations[type](...payload)
     } else {
       throw new Error(`unknown mutation: ${String(type)}`)
     }
   }
 
-  public dispatch (act: keyof A, payload: Payload<Parameters<A[typeof act]>[1]>): ReturnType<A[typeof act]> {
+  public dispatch (act: keyof A, ...payload: Payload<SecondParam<A, typeof act>>): ActionReturnType<A, typeof act> {
     if (typeof this.actions[act] === 'function') {
-      return this.actions[act](payload)
+      return this.actions[act](...payload)
     }
-    return Promise.reject(new Error(`unknown action: ${String(act)}`)) as ReturnType<A[typeof act]>
+    return Promise.reject(new Error(`unknown action: ${String(act)}`)) as ActionReturnType<A, typeof act>
   }
 
   public toJSON (): IStoreBase<S, G> {

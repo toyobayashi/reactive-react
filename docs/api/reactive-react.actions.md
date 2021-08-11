@@ -9,8 +9,8 @@
 
 ```typescript
 export declare type Actions<A extends IActionsTree<any, any, any, any>> = {
-    [K in keyof A]: (payload: Payload<Parameters<A[K]>[1]>) => ReturnType<A[K]>;
+    [K in keyof A]: (...payload: Payload<SecondParam<A, K>>) => ActionReturnType<A, K>;
 };
 ```
-<b>References:</b> [IActionsTree](./reactive-react.iactionstree.md)<!-- -->, [Payload](./reactive-react.payload.md)
+<b>References:</b> [IActionsTree](./reactive-react.iactionstree.md)<!-- -->, [Payload](./reactive-react.payload.md)<!-- -->, [SecondParam](./reactive-react.secondparam.md)<!-- -->, [ActionReturnType](./reactive-react.actionreturntype.md)
 

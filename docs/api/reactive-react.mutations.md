@@ -9,8 +9,8 @@
 
 ```typescript
 export declare type Mutations<M extends IMutationsTree<any>> = {
-    [K in keyof M]: (payload: Payload<Parameters<M[K]>[1]>) => void;
+    [K in keyof M]: (...payload: Payload<SecondParam<M, K>>) => void;
 };
 ```
-<b>References:</b> [IMutationsTree](./reactive-react.imutationstree.md)<!-- -->, [Payload](./reactive-react.payload.md)
+<b>References:</b> [IMutationsTree](./reactive-react.imutationstree.md)<!-- -->, [Payload](./reactive-react.payload.md)<!-- -->, [SecondParam](./reactive-react.secondparam.md)
 
