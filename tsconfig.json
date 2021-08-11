@@ -1,12 +1,9 @@
 {
-  "extends": "./tsconfig.base.json",
+  "extends": "./node_modules/@tybys/tsgo/tsconfig/tsconfig.json",
   "compilerOptions": {
+    "noEmit": true,
     "jsx": "react",
-    
-    "module": "esnext",
-    "target": "es5",
-    "importHelpers": true,
-    "noEmitHelpers": true
+    "sourceMap": false,
   },
   "include": [
     "./src/**/*"

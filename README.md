@@ -1,96 +1,17 @@
 # reactive-react
 
-10 行代码让 react 用上 `@vue/reactivity`
+[API Documentation](https://github.com/toyobayashi/reactive-react/blob/main/docs/api/index.md)
 
-```bash
-npm install
-npm run serve
-```
+[中文](https://github.com/toyobayashi/reactive-react/blob/main/test)
 
-## 核心代码
+## Example
 
-共 10 行：
+### Hooks
 
-```js
-import { effect, stop } from '@vue/reactivity'
-
-function untrack (context) {
-  if (context.$$reactiveRender) {
-    stop(context.$$reactiveRender)
-    context.$$reactiveRender = null
-  }
-}
-
-function track (context, renderFunction) {
-  untrack(context)
-  context.$$reactiveRender = effect(renderFunction, {
-    lazy: true,
-    scheduler: () => { context.forceUpdate() }
-  })
-  return context.$$reactiveRender()
-}
-```
-
-其中响应式组件上下文 `context` 长这样：
-
-```ts
-import type { ReactiveEffectRunner } from '@vue/reactivity'
-import type { ReactNode } from 'react'
-
-declare interface ReactiveComponentContext {
-  $$reactiveRender: ReactiveEffectRunner<ReactNode> | null
-  forceUpdate (callback?: () => void): void
-}
-```
-
-核心思想就是把渲染函数用 vue 的 `effect` 包一层，JSX 中访问到的响应式对象会被依赖收集，有变更时自动更新组件。
-
-## Hooks 写法
-
-```js
+```jsx
 import * as React from 'react'
-import { ref, computed, effectScope } from '@vue/reactivity'
-
-const emptyDepList = []
-
-function useForceUpdate () {
-  const setState = React.useState(null)[1]
-  return React.useCallback(() => { setState(Object.create(null)) }, emptyDepList)
-}
-
-function useMutable (factory) {
-  const ref = React.useRef()
-  if (ref.current == null) {
-    const maybeObject = factory()
-    if ((typeof maybeObject !== 'object' || maybeObject === null) && (typeof maybeObject !== 'function')) {
-      throw new TypeError('useMutable callback must return object')
-    }
-    ref.current = maybeObject
-  }
-  return ref.current
-}
-
-function useData (factory) {
-  const scope = useMutable(() => effectScope())
-  const data = useMutable(() => scope.run(factory))
-  React.useEffect(() => () => { scope.stop() }, emptyDepList)
-  return data
-}
-
-function useRender (render) {
-  const forceUpdate = useForceUpdate()
-  // 响应式组件上下文
-  const context = useMutable(() => ({
-    $$reactiveRender: null,
-    forceUpdate
-  }))
-
-  // 组件销毁取消监听
-  React.useEffect(() => () => { untrack(context) }, emptyDepList)
-
-  // 每次渲染重新依赖收集
-  return track(context, render)
-}
+import { ref, computed } from '@vue/reactivity'
+import { useData, useRender } from '@tybys/reactive-react'
 
 function Counter () {
   const data = useData(() => {
@@ -107,198 +28,110 @@ function Counter () {
   })
 
   return useRender(() =>
-    <div>{data.localCount.value} * 2 = {data.localDoubleCount.value} <button onClick={data.onClick}>Local +</button></div>
+    <div>
+      {data.localCount.value} * 2 = {data.localDoubleCount.value}
+      <button onClick={data.onClick}>+</button>
+    </div>
   )
 }
 ```
 
-## Class 写法
+### Class
 
-```js
+```jsx
 import * as React from 'react'
-import { ref, computed, effectScope } from '@vue/reactivity'
-
-class ReactiveComponent extends React.Component {
-  constructor (props) {
-    super(props)
-    // 组件实例本身当成响应式组件上下文
-    this.$$reactiveRender = null
-    // 响应式效果作用域
-    this.$$scope = effectScope()
-    this.$$scope.run(this.onCreateReactiveData.bind(this))
-  }
-
-  // @virtual
-  onCreateReactiveData () {}
-
-  renderReactive (render) {
-    return track(this, render)
-  }
-
-  componentWillUnmount () {
-    this.$$scope.stop()
-    untrack(this)
-  }
-}
+import { ref, computed } from '@vue/reactivity'
+import { ReactiveComponent } from '@tybys/reactive-react'
 
 class Counter extends ReactiveComponent {
   constructor (props) {
-    super(props) // onCreateReactiveData 被调用
+    super(props) // onCreateReactiveData will be called
 
     this.onClick = () => {
       this.localCount.value++
     }
   }
 
+  /** @override */
   onCreateReactiveData () {
-    // 组件被卸载时清除所有收集到的响应式效果
+    // all reactive effect should be collected here
     this.localCount = ref(0)
     this.localDoubleCount = computed(() => this.localCount.value * 2)
   }
 
   render () {
-    // 每次渲染重新依赖收集
-    return this.renderReactive(() => {
-      return <div>{this.localCount.value} * 2 = {this.localDoubleCount.value} <button onClick={this.onClick}>Local +</button></div>
-    })
+    return this.renderReactive(() =>
+      <div>
+        {this.localCount.value} * 2 = {this.localDoubleCount.value}
+        <button onClick={this.onClick}>+</button>
+      </div>
+    )
   }
 
+  /** @override */
   componentWillUnmount () {
     // ...
-    // 最后要调用父类的 componentWillUnmount
     super.componentWillUnmount()
   }
 })
 ```
 
-## 实现简易版的 Vuex
+### Global State Management
 
-```js
-import { reactive, computed, effectScope } from '@vue/reactivity'
+Like vuex:
 
-class StoreImpl {
-  // getters
-  // data
+```jsx
+import * as React from 'react'
+import { Store } from '@tybys/reactive-react'
 
-  constructor (store, state, getters) {
-    this.resetState(store, state, getters, false)
-  }
-
-  resetState (store, state, getters, hot) {
-    if (this._scope) this._scope.stop()
-    this._scope = effectScope()
-    this.getters = Object.create(null)
-    const oldData = this.data
-    const proxy = reactive({ $$state: state })
-    if (getters) {
-      Object.keys(getters).forEach((key) => {
-        let computedRef
-        Object.defineProperty(this.getters, key, {
-          get: () => {
-            if (!computedRef) {
-              computedRef = this._scope.run(() => {
-                return computed(() => getters[key].call(store, proxy.$$state, this.getters))
-              })
-            }
-            return computedRef.value
-          },
-          enumerable: true
-        })
-      })
+const store = new Store({
+  state: {
+    count: 0
+  },
+  getters: {
+    doubleCount (state /*, getters */) {
+      return state.count * 2
     }
-    this.data = proxy
-    if (oldData && hot) {
-      oldData.$$state = null
+  },
+  mutations: {
+    add (state, value = 1) {
+      state.count += value
+    },
+    multi (state, value = 2) {
+      state.count *= value
     }
-  }
-
-  dispose () {
-    if (this._disposed) return
-    if (this._scope) this._scope.stop()
-    this._scope = null!
-    this.getters = null!
-    this.data = null!
-    this._disposed = true
-  }
-}
-
-class Store {
-  // __impl
-  // mutations
-  // actions
-
-  constructor (options) {
-    if (!options || !options.state) {
-      throw new TypeError('missing state option')
-    }
-    Object.defineProperty(this, '__impl', {
-      configurable: true,
-      enumerable: false,
-      writable: true,
-      value: new StoreImpl(this, options.state, options.getters)
-    })
-
-    Object.defineProperty(this, 'mutations', {
-      configurable: true,
-      value: Object.create(null)
-    })
-
-    Object.defineProperty(this, 'actions', {
-      configurable: true,
-      value: Object.create(null)
-    })
-
-    if (options.mutations) {
-      Object.keys(options.mutations).forEach(key => {
-        this.mutations[key] = (payload) => {
-          options.mutations[key].call(this, this.state, payload)
-        }
-      })
-    }
-    if (options.actions) {
-      const context = {
-        state: this.state,
-        getters: this.getters,
-        commit: this.commit.bind(this),
-        dispatch: this.dispatch.bind(this)
-      }
-      Object.keys(options.actions).forEach(key => {
-        this.actions[key] = (payload) =>
-          options.actions[key].call(this, context, payload)
+  },
+  actions: {
+    multi ({ commit /*, state, getters, dispatch */}, value = 2) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          commit('multi', value)
+          resolve()
+        }, 200)
       })
     }
   }
+})
 
-  get state () {
-    return this.__impl.data.$$state
-  }
-
-  get getters () {
-    return this.__impl.getters
-  }
-
-  commit (type, payload) {
-    if (typeof this.mutations[type] === 'function') {
-      this.mutations[type](payload)
-    } else {
-      throw new Error('unknown mutation: ' + type)
+function Counter () {
+  const data = useData(() => {
+    const commit = () => {
+      store.mutations.add(10)
+      // or store.commit('add', 10)
     }
-  }
-
-  dispatch (act, payload) {
-    if (typeof this.actions[act] === 'function') {
-      return this.actions[act](payload)
+    const dispatch = () => {
+      store.actions.multi(5)
+      // or store.dispatch('multi', 5)
     }
-    return Promise.reject(new Error('unknown action: ' + act))
-  }
+    return { commit, dispatch }
+  })
 
-  dispose (): void {
-    if (this.__impl) {
-      this.__impl.dispose()
-      this.__impl = null
-      this.mutations = null
-      this.actions = null
-    }
-  }
+  return useRender(() =>
+    <div>
+      {store.state.count} * 2 = {store.getters.doubleCount}
+      <button onClick={data.commit}>+</button>
+      <button onClick={data.dispatch}>x</button>
+    </div>
+  )
 }
 ```
