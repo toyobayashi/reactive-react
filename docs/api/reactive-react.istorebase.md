@@ -8,7 +8,7 @@
 <b>Signature:</b>
 
 ```typescript
-export interface IStoreBase<S extends object, G extends IGettersTree<S, G>> 
+export interface IStoreBase<S extends object, G extends GettersTree<S, G>> 
 ```
 
 ## Properties

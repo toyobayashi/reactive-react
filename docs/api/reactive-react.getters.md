@@ -8,9 +8,9 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type Getters<G> = G extends IGettersTree<any, any> ? {
+export declare type Getters<G> = G extends GettersTree<any, any> ? {
     [K in keyof G]: ReturnType<G[K]>;
 } : Record<string, any>;
 ```
-<b>References:</b> [IGettersTree](./reactive-react.igetterstree.md)
+<b>References:</b> [GettersTree](./reactive-react.getterstree.md)
 

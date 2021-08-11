@@ -8,7 +8,7 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type GetterHandler<S extends object, G extends IGettersTree<S, G>, R> = (state: S, getters: Getters<G>) => R;
+export declare type GetterHandler<S extends object, G extends GettersTree<S, G>, R> = (state: S, getters: Getters<G>) => R;
 ```
-<b>References:</b> [IGettersTree](./reactive-react.igetterstree.md)<!-- -->, [Getters](./reactive-react.getters.md)
+<b>References:</b> [GettersTree](./reactive-react.getterstree.md)<!-- -->, [Getters](./reactive-react.getters.md)
 

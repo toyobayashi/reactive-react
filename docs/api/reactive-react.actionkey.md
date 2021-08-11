@@ -8,7 +8,7 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type ActionKey<A> = A extends IActionsTree<any, any, any, any> ? keyof A : (string | number | symbol);
+export declare type ActionKey<A> = A extends ActionsTree<any, any, any, any> ? keyof A : Index;
 ```
-<b>References:</b> [IActionsTree](./reactive-react.iactionstree.md)
+<b>References:</b> [ActionsTree](./reactive-react.actionstree.md)<!-- -->, [Index](./reactive-react.index.md)
 

@@ -8,7 +8,7 @@
 <b>Signature:</b>
 
 ```typescript
-export interface IStore<S extends object, G extends IGettersTree<S, G>, M extends IMutationsTree<S>, A extends IActionsTree<S, G, M, A>> extends Readonly<IStoreBase<S, G>> 
+export interface IStore<S extends object, G extends GettersTree<S, G> | {}, M extends MutationsTree<S> | {}, A extends ActionsTree<S, G, M, A> | {}> extends Readonly<IStoreBase<S, G>> 
 ```
 <b>Extends:</b> Readonly&lt;[IStoreBase](./reactive-react.istorebase.md)<!-- -->&lt;S, G&gt;&gt;
 

@@ -7,16 +7,17 @@
 <b>Signature:</b>
 
 ```typescript
-dispatch<K extends keyof A | string | number>(...args: DispatchParam<A, K>): ActionReturnType<A, typeof args[0]>;
+dispatch<K extends keyof A | Index>(act: K, ...payload: Payload<SecondParam<A, K>>): ActionReturnType<A, typeof act>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  args | [DispatchParam](./reactive-react.dispatchparam.md)<!-- -->&lt;A, K&gt; |  |
+|  act | K |  |
+|  payload | [Payload](./reactive-react.payload.md)<!-- -->&lt;[SecondParam](./reactive-react.secondparam.md)<!-- -->&lt;A, K&gt;&gt; |  |
 
 <b>Returns:</b>
 
-[ActionReturnType](./reactive-react.actionreturntype.md)<!-- -->&lt;A, typeof args\[0\]&gt;
+[ActionReturnType](./reactive-react.actionreturntype.md)<!-- -->&lt;A, typeof act&gt;
 

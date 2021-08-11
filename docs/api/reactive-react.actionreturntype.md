@@ -8,7 +8,7 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type ActionReturnType<T, K extends string | number | keyof T> = T extends IActionsTree<any, any, any, any> ? Promise<T[K]> : Promise<any>;
+export declare type ActionReturnType<T, K extends Index | keyof T> = T extends ActionsTree<any, any, any, any> ? ReturnType<T[K]> : Promise<any>;
 ```
-<b>References:</b> [IActionsTree](./reactive-react.iactionstree.md)
+<b>References:</b> [Index](./reactive-react.index.md)<!-- -->, [ActionsTree](./reactive-react.actionstree.md)
 

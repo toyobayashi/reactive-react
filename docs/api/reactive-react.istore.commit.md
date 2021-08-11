@@ -7,15 +7,15 @@
 <b>Signature:</b>
 
 ```typescript
-commit(type: keyof M, ...payload: Payload<SecondParam<M, typeof type>>): void;
+commit<K extends keyof M>(type: K, ...payload: Payload<SecondParam<M, K>>): void;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  type | keyof M |  |
-|  payload | [Payload](./reactive-react.payload.md)<!-- -->&lt;[SecondParam](./reactive-react.secondparam.md)<!-- -->&lt;M, typeof type&gt;&gt; |  |
+|  type | K |  |
+|  payload | [Payload](./reactive-react.payload.md)<!-- -->&lt;[SecondParam](./reactive-react.secondparam.md)<!-- -->&lt;M, K&gt;&gt; |  |
 
 <b>Returns:</b>
 

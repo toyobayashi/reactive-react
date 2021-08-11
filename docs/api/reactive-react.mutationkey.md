@@ -8,7 +8,7 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type MutationKey<M> = M extends IMutationsTree<any> ? keyof M : (string | number | symbol);
+export declare type MutationKey<M> = M extends MutationsTree<any> ? keyof M : Index;
 ```
-<b>References:</b> [IMutationsTree](./reactive-react.imutationstree.md)
+<b>References:</b> [MutationsTree](./reactive-react.mutationstree.md)<!-- -->, [Index](./reactive-react.index.md)
 

@@ -8,7 +8,7 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type ActionHandler<S extends object, G extends IGettersTree<S, G>, M extends IMutationsTree<S>, A extends IActionsTree<S, G, M, A>, P extends [any?], R> = (...args: [IActionContext<S, G, M, A>, ...P]) => Promise<R>;
+export declare type ActionHandler<S extends object, G extends GettersTree<S, G>, M extends MutationsTree<S>, A extends ActionsTree<S, G, M, A>, P extends [any?], R> = (...args: [IActionContext<S, G, M, A>, ...P]) => Promise<R>;
 ```
-<b>References:</b> [IGettersTree](./reactive-react.igetterstree.md)<!-- -->, [IMutationsTree](./reactive-react.imutationstree.md)<!-- -->, [IActionsTree](./reactive-react.iactionstree.md)<!-- -->, [IActionContext](./reactive-react.iactioncontext.md)
+<b>References:</b> [GettersTree](./reactive-react.getterstree.md)<!-- -->, [MutationsTree](./reactive-react.mutationstree.md)<!-- -->, [ActionsTree](./reactive-react.actionstree.md)<!-- -->, [IActionContext](./reactive-react.iactioncontext.md)
 

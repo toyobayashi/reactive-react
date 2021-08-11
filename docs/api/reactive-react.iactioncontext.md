@@ -8,7 +8,7 @@
 <b>Signature:</b>
 
 ```typescript
-export interface IActionContext<S extends object, G extends IGettersTree<S, G>, M extends IMutationsTree<S>, A extends IActionsTree<S, G, M, A>> 
+export interface IActionContext<S extends object, G extends GettersTree<S, G>, M extends MutationsTree<S>, A extends ActionsTree<S, G, M, A>> 
 ```
 
 ## Properties
@@ -22,6 +22,6 @@ export interface IActionContext<S extends object, G extends IGettersTree<S, G>, 
 
 |  Method | Description |
 |  --- | --- |
-|  [commit(args)](./reactive-react.iactioncontext.commit.md) |  |
-|  [dispatch(args)](./reactive-react.iactioncontext.dispatch.md) |  |
+|  [commit(type, payload)](./reactive-react.iactioncontext.commit.md) |  |
+|  [dispatch(act, payload)](./reactive-react.iactioncontext.dispatch.md) |  |
 
