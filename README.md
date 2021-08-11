@@ -82,9 +82,9 @@ Like vuex:
 
 ```jsx
 import * as React from 'react'
-import { Store } from '@tybys/reactive-react'
+import { createStore } from '@tybys/reactive-react'
 
-const store = new Store({
+const store = createStore({
   state: {
     count: 0
   },

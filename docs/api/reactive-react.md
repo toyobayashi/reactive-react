@@ -10,12 +10,12 @@
 |  --- | --- |
 |  [PureReactiveComponent](./reactive-react.purereactivecomponent.md) |  |
 |  [ReactiveComponent](./reactive-react.reactivecomponent.md) |  |
-|  [Store](./reactive-react.store.md) |  |
 
 ## Functions
 
 |  Function | Description |
 |  --- | --- |
+|  [createStore(options)](./reactive-react.createstore.md) |  |
 |  [track(context, renderFunction)](./reactive-react.track.md) |  |
 |  [untrack(context)](./reactive-react.untrack.md) |  |
 |  [useData(factory)](./reactive-react.usedata.md) |  |

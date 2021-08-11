@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { ref, computed } from '@vue/reactivity'
 import type { Ref, ComputedRef } from '@vue/reactivity'
-import { useRender, useData, ReactiveComponent, Store } from '../..'
+import { useRender, useData, ReactiveComponent, createStore } from '../..'
 /* import type { GetterHandler, MutationHandler, ActionHandler } from '../..'
 
 interface IState {
@@ -23,7 +23,7 @@ type Actions = {
   multi: ActionHandler<IState, GettersTree, Mutations, Actions, [number?], void>
 } */
 
-const store = new Store/* <IState, GettersTree, Mutations, Actions> */({
+const store = createStore/* <IState, GettersTree, Mutations, Actions> */({
   state: {
     count: 0,
     mountC: true

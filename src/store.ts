@@ -147,7 +147,7 @@ class StoreImpl<S extends object, G extends GettersTree<S, G>> {
 }
 
 /** @public */
-export class Store<S extends object, G extends GettersTree<S, G> | {}, M extends MutationsTree<S> | {}, A extends ActionsTree<S, G, M, A> | {}> implements IStore<S, G, M, A> {
+class Store<S extends object, G extends GettersTree<S, G> | {}, M extends MutationsTree<S> | {}, A extends ActionsTree<S, G, M, A> | {}> implements IStore<S, G, M, A> {
   private __impl!: StoreImpl<S, G>
   public readonly mutations!: Mutations<M>
   public readonly actions!: Actions<A>
@@ -246,4 +246,13 @@ export class Store<S extends object, G extends GettersTree<S, G> | {}, M extends
       (this as any).actions = null
     }
   }
+}
+
+export function createStore<
+  S extends object,
+  G extends GettersTree<S, G> | {},
+  M extends MutationsTree<S> | {},
+  A extends ActionsTree<S, G, M, A> | {}
+> (options: IStoreOptions<S, G, M, A>): IStore<S, G, M, A> {
+  return new Store(options)
 }
