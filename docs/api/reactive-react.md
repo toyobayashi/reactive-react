@@ -16,7 +16,7 @@
 |  Function | Description |
 |  --- | --- |
 |  [createStore(options)](./reactive-react.createstore.md) |  |
-|  [makeReactive(C)](./reactive-react.makereactive.md) |  |
+|  [makeReactive(C, observe)](./reactive-react.makereactive.md) |  |
 |  [track(context, renderFunction)](./reactive-react.track.md) |  |
 |  [untrack(context)](./reactive-react.untrack.md) |  |
 |  [useData(factory)](./reactive-react.usedata.md) |  |

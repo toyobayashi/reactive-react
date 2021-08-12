@@ -83,9 +83,12 @@ import * as React from 'react'
 import { AnyComponent } from 'xx-react-component-library'
 import { makeReactive } from '@tybys/reactive-react'
 
-const ReactiveAnyComponent = makeReactive(AnyComponent)
+const ReactiveAnyComponent = makeReactive(AnyComponent, (props) => ([
+  props.xxProp,
+  propsx.xxProp2
+]))
 
-<ReactiveAnyComponent xxProp={yourReactiveData} />
+<ReactiveAnyComponent xxProp={yourReactiveData} xxProp2={yourReactiveData2} />
 ```
 
 ### Global State Management
