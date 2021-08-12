@@ -76,6 +76,18 @@ class Counter extends ReactiveComponent {
 })
 ```
 
+### HOC
+
+```jsx
+import * as React from 'react'
+import { AnyComponent } from 'xx-react-component-library'
+import { makeReactive } from '@tybys/reactive-react'
+
+const ReactiveAnyComponent = makeReactive(AnyComponent)
+
+<ReactiveAnyComponent xxProp={yourReactiveData} />
+```
+
 ### Global State Management
 
 Like vuex:

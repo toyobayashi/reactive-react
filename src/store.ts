@@ -146,7 +146,6 @@ class StoreImpl<S extends object, G extends GettersTree<S, G>> {
   }
 }
 
-/** @public */
 class Store<S extends object, G extends GettersTree<S, G> | {}, M extends MutationsTree<S> | {}, A extends ActionsTree<S, G, M, A> | {}> implements IStore<S, G, M, A> {
   private __impl!: StoreImpl<S, G>
   public readonly mutations!: Mutations<M>

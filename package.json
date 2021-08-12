@@ -1,6 +1,6 @@
 {
   "name": "@tybys/reactive-react",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "",
   "jsdelivr": "./dist/reactive-react.js",
   "unpkg": "./dist/reactive-react.js",
