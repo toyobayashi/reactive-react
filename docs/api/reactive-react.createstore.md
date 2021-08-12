@@ -4,6 +4,7 @@
 
 ## createStore() function
 
+
 <b>Signature:</b>
 
 ```typescript

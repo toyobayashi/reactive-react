@@ -248,6 +248,7 @@ class Store<S extends object, G extends GettersTree<S, G> | {}, M extends Mutati
   }
 }
 
+/** @public */
 export function createStore<
   S extends object,
   G extends GettersTree<S, G> | {},
