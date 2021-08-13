@@ -6,13 +6,13 @@ import { track, untrack } from './core'
 import type { ReactiveComponentContext, RenderFunction } from './types'
 import { useRender } from './hooks'
 
-const objectToString = Object.prototype.toString
-const toTypeString = (value: any): string => objectToString.call(value)
-const isArray = Array.isArray
-const isMap = (val: any): val is Map<any, any> => toTypeString(val) === '[object Map]'
-const isSet = (val: any): val is Set<any> => toTypeString(val) === '[object Set]'
-const isObject = (val: any): val is object => val !== null && typeof val === 'object'
-const isPlainObject = (val: any): val is object => toTypeString(val) === '[object Object]'
+import {
+  isArray,
+  isMap,
+  isSet,
+  isObject,
+  isPlainObject
+} from '@vue/shared'
 
 /** @public */
 export class ReactiveComponent<P = {}, S = {}, SS = any> extends Component<P, S, SS> implements ReactiveComponentContext {
@@ -61,30 +61,30 @@ export class PureReactiveComponent<P = {}, S = {}, SS = any> extends PureCompone
 }
 
 /** @public */
-export function makeReactive<P, T extends ComponentType<P> = ComponentType<P>> (C: T, observe: (props: P, context?: any) => any): T {
+export function makeReactive<P, T extends ComponentType<P> = ComponentType<P>> (C: T, observe?: (props: P, context?: any) => any): T {
   if (typeof C !== 'function') {
     throw new TypeError('The first argument of makeReactive should be a React component')
   }
-  if (typeof observe !== 'function') {
-    throw new TypeError('The second argument of makeReactive should be a function')
+  if (observe != null && typeof observe !== 'function') {
+    throw new TypeError('The second argument of makeReactive should be a function or undefined')
   }
   if ((C as any).$$isReactive) return C
   if (typeof C.prototype.render === 'function') {
-    if ((C.prototype instanceof ReactiveComponent) || (C.prototype instanceof PureReactiveComponent)) {
-      return C
-    }
     const Comp = C as ComponentClass<P>
-    const Component = class Component extends Comp implements ReactiveComponentContext {
+    const Component = class extends Comp implements ReactiveComponentContext {
       $$reactiveRender: ReactiveEffectRunner<ReactNode> | null = null
 
       /** @override */
       render (): ReactNode {
         return track(this, () => {
-          traverse(observe(this.props, this.context))
+          if (observe) {
+            traverse(observe(this.props, this.context))
+          }
           return super.render()
         })
       }
 
+      /** @override */
       componentWillUnmount (): void {
         untrack(this)
         if (typeof super.componentWillUnmount === 'function') {
@@ -92,18 +92,15 @@ export function makeReactive<P, T extends ComponentType<P> = ComponentType<P>> (
         }
       }
     };
-    ['propTypes', 'contextType', 'contextTypes', 'childContextTypes', 'defaultProps', 'displayName'].forEach((k) => {
-      if (k in Comp) {
-        (Component as any)[k] = Comp[k as 'propTypes' | 'contextType' | 'contextTypes' | 'childContextTypes' | 'defaultProps' | 'displayName']
-      }
-    });
     (Component as any).$$isReactive = true
     return Component as unknown as T
   } else {
     const render = C as FunctionComponent<P>
     const Component: FunctionComponent<P> = function (...args: [P, any?]) {
       return useRender(() => {
-        traverse(observe(...args))
+        if (observe) {
+          traverse(observe(...args))
+        }
         return render(...args)
       })
     };

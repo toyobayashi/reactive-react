@@ -8,7 +8,7 @@
 <b>Signature:</b>
 
 ```typescript
-export declare function makeReactive<P, T extends ComponentType<P> = ComponentType<P>>(C: T, observe: (props: P, context?: any) => any): T;
+export declare function makeReactive<P, T extends ComponentType<P> = ComponentType<P>>(C: T, observe?: (props: P, context?: any) => any): T;
 ```
 
 ## Parameters
